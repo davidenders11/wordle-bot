@@ -69,7 +69,7 @@ def gradeWord():
       game_board[guess_counter][ind][1] = YELLOW
       temp_final = setCharToNull(temp_final, temp_final.index(curr_chr)) # Avoid double-counting letters
   if green_counter == 5:
-    print("You win!")
+    print("You won on guess number " + str(guess_counter + 1) + "!")
     return
   # Next guess!
   current_col = 0
