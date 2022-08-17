@@ -56,18 +56,17 @@ def gradeWord():
   global guess_counter
   temp_final = final_word
   if current_col != 5: return # character counter should be at 5 if word done
-  green_counter = 0
+  green_counter = 0 
+  guess = ''.join([game_board[guess_counter][col][0] for col in range(5)])
   for ind in range(0, 5):
-    curr_chr = game_board[guess_counter][ind][0]
-    if curr_chr == temp_final[ind]:
-      print(curr_chr + " is in " + final_word + " at that location!")
+    if temp_final[ind] == guess[ind]: # Right letter in right spot
+      print(guess[ind] + " is in " + final_word + " at that location!")
       game_board[guess_counter][ind][1] = GREEN
       green_counter += 1
-      temp_final = setCharToNull(temp_final, ind) # Avoid double-counting letters
-    elif curr_chr in temp_final:
-      print(curr_chr + " is in " + final_word + " at a different location!")
+    elif temp_final[ind] in guess: # Right letter in wrong spot
+      print(temp_final[ind] + " is in " + final_word + " at a different location!")
       game_board[guess_counter][ind][1] = YELLOW
-      temp_final = setCharToNull(temp_final, temp_final.index(curr_chr)) # Avoid double-counting letters
+    temp_final = setCharToNull(temp_final, ind) # Avoid double-counting letters
   if green_counter == 5:
     print("You won on guess number " + str(guess_counter + 1) + "!")
     return
@@ -92,9 +91,6 @@ while running:
             gradeWord() 
           elif event.key in range(97,123): # type next letter in word
             addToBoard(event.unicode)
-            # game_board[row][column][1] = GREEN
-            # game_board[row][column][0] = event.unicode
-            # print(game_board)
  
     # Set the screen background
     screen.fill(BLACK)
