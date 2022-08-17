@@ -50,23 +50,33 @@ def setCharToNull(word, ind):
   """Replaces the index we just visited with a space"""
   return word[0:ind] + " " + word[ind+1:]
 
+def setNextYellow(letter, guess):
+  """Finds the next GREY occurence of letter in question and sets to YELLOW"""
+  next = guess.index(letter) # try the first occurence of the letter
+  color = game_board[guess_counter][next][1]
+  while (color != GREY):
+    next = guess.index(letter, next + 1) # look for next instance of letter
+    color = game_board[guess_counter][next][1]
+  game_board[guess_counter][next][1] = YELLOW
+
 def gradeWord():
   """Grades word if complete word has been typed, else does nothing"""
   global current_col
   global guess_counter
-  temp_final = final_word
+  temp_final = final_word # use this to modify correct word to avoid double-counting
   if current_col != 5: return # character counter should be at 5 if word done
-  green_counter = 0 
+  green_counter = 0 # player wins if equals 5
   guess = ''.join([game_board[guess_counter][col][0] for col in range(5)])
   for ind in range(0, 5):
     if temp_final[ind] == guess[ind]: # Right letter in right spot
       print(guess[ind] + " is in " + final_word + " at that location!")
       game_board[guess_counter][ind][1] = GREEN
       green_counter += 1
-    elif temp_final[ind] in guess: # Right letter in wrong spot
+      temp_final = setCharToNull(temp_final, ind) # avoid double-counting
+  for ind in range(0, 5):
+    if temp_final[ind] in guess: # Right letter in wrong spot
       print(temp_final[ind] + " is in " + final_word + " at a different location!")
-      game_board[guess_counter][ind][1] = YELLOW
-    temp_final = setCharToNull(temp_final, ind) # Avoid double-counting letters
+      setNextYellow(temp_final[ind], guess)
   if green_counter == 5:
     print("You won on guess number " + str(guess_counter + 1) + "!")
     return
