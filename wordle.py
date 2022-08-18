@@ -18,7 +18,8 @@ HEIGHT = 75
 MARGIN = 5
 
 # Initialize game variables
-final_word = words[random.randrange(1,5758)].upper() # Winning word!
+final_word = 'TROLL'
+# final_word = words[random.randrange(1,5758)].upper() # Winning word!
 guess_counter = 0
 current_col = 0
 game_board = [[["", GREY] for width in range(5)] for height in range(6)] 
@@ -61,26 +62,53 @@ def setNextYellow(letter, guess): #TODO this might be broken
 
 def gradeWord():
   """Grades word if complete word has been typed, else does nothing"""
+
   global current_col
   global guess_counter
-  temp_final = final_word # use this to modify correct word to avoid double-counting
+  game_over = False
+
+  # use this to modify correct word to avoid double-counting
+  final_copy = final_word 
+
   if current_col != 5: return # character counter should be at 5 if word done
   green_counter = 0 # player wins if equals 5
+
   guess = ''.join([game_board[guess_counter][col][0] for col in range(5)])
-  print("You guessed: " + guess)
+
+  if guess.lower() in words:
+    print("You guessed: " + guess)
+  else:
+    print("Not a valid word")
+    for i in range(5):
+      deleteLast()
+    return game_over
+
+  # Check for greens
   for ind in range(0, 5):
-    if temp_final[ind] == guess[ind]: # Right letter in right spot
+    if final_copy[ind] == guess[ind]: # Right letter in right spot
       print(guess[ind] + " is in " + final_word + " at that location!")
       game_board[guess_counter][ind][1] = GREEN
       green_counter += 1
-      temp_final = setCharToNull(temp_final, ind) # avoid double-counting
-  for ind in range(0, 5):
-    if temp_final[ind] in guess: # Right letter in wrong spot
-      print(temp_final[ind] + " is in " + final_word + " at a different location!")
-      setNextYellow(temp_final[ind], guess)
+      final_copy = setCharToNull(final_copy, ind) # avoid double-counting
+
+  for ind in range(0,5):
+    # Check if we already marked green
+    if final_copy[ind] == ' ' and ind != 4:
+        ind += 1
+    if guess[ind] in final_copy:
+      print(final_copy[ind] + " is in " + final_word + " at a different location!")
+      game_board[guess_counter][ind][1] = YELLOW
+  
   if green_counter == 5:
     print("You won on guess number " + str(guess_counter + 1) + "!")
-    return
+    game_over = True
+    return game_over
+
+  if guess_counter == 6:
+    print("You lost, bitch")
+    game_over = True
+    return game_over
+
   # Next guess!
   current_col = 0
   guess_counter = guess_counter + 1 if guess_counter < 5 else guess_counter
@@ -89,17 +117,19 @@ def gradeWord():
 # -------- Main Program Loop ----------- #
 print(final_word)
 running = True
+game_over = False
 clock = pygame.time.Clock() # Used to manage how fast the screen updates
 while running:
     for event in pygame.event.get():  # User did something
         if event.type == pygame.QUIT or \
-        (event.type == KEYDOWN and event.key == K_ESCAPE):
+        (event.type == KEYDOWN and event.key == K_ESCAPE) or \
+          game_over == True:
           running = False # end game if quit
         elif event.type == pygame.KEYDOWN:
           if event.key == K_BACKSPACE: # delete last character
             deleteLast()
           elif event.key == K_RETURN: # check if word is correct
-            gradeWord() 
+            game_over = gradeWord() 
           elif event.key in range(97,123): # type next letter in word
             addToBoard(event.unicode)
  
