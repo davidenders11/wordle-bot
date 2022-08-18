@@ -50,7 +50,7 @@ def setCharToNull(word, ind):
   """Replaces the index we just visited with a space"""
   return word[0:ind] + " " + word[ind+1:]
 
-def setNextYellow(letter, guess):
+def setNextYellow(letter, guess): #TODO this might be broken
   """Finds the next GREY occurence of letter in question and sets to YELLOW"""
   next = guess.index(letter) # try the first occurence of the letter
   color = game_board[guess_counter][next][1]
@@ -67,6 +67,7 @@ def gradeWord():
   if current_col != 5: return # character counter should be at 5 if word done
   green_counter = 0 # player wins if equals 5
   guess = ''.join([game_board[guess_counter][col][0] for col in range(5)])
+  print("You guessed: " + guess)
   for ind in range(0, 5):
     if temp_final[ind] == guess[ind]: # Right letter in right spot
       print(guess[ind] + " is in " + final_word + " at that location!")
