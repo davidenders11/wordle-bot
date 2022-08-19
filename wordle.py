@@ -2,6 +2,9 @@ import numpy as np
 import random as random
 import pygame
 from pygame.locals import *
+from hash_table import final_hash_table
+
+print(final_hash_table[0])
 
 # Word list
 with open("sgb-words.txt", "r") as tf:
