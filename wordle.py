@@ -2,13 +2,19 @@ import numpy as np
 import random as random
 import pygame
 from pygame.locals import *
-from hash_table import final_hash_table
-
-print(final_hash_table[0])
+from hash_table import final_hash_table, intersect
 
 # Word list
 with open("sgb-words.txt", "r") as tf:
-    words = tf.read().split('\n')
+  words = tf.read().split('\n')
+
+# Initialize running list of possible words
+poss_sols = set([])
+for row in range(5):
+  for col in range(26):
+    for word in final_hash_table[row][col]:
+      poss_sols.add(word)
+print(type(poss_sols))
 
 # Game colors and cell dimensions
 WHITE = (255, 255, 255)
@@ -36,7 +42,12 @@ SCREEN_SIZE = [SCREEN_WIDTH, SCREEN_HEIGHT]
 screen = pygame.display.set_mode(SCREEN_SIZE)
 pygame.display.set_caption("Wordle Game")
 screen.fill(BLACK)
-# -------- Helper Functions ----------- #
+
+# -------- Game Helper Functions ----------- #
+def intersection(list1, list2):
+  """Return a set with every element in both lists, no duplicates"""
+  return set(list1).intersection(list2)
+
 def deleteLast():
   """Decrement current_col to previous letter if there is one and clear that letter"""
   global current_col
@@ -99,7 +110,7 @@ def gradeWord():
     if final_copy[ind] == ' ' and ind != 4:
         ind += 1
     if guess[ind] in final_copy:
-      print(final_copy[ind] + " is in " + final_word + " at a different location!")
+      print(guess[ind] + " is in " + final_word + " at a different location!")
       game_board[guess_counter][ind][1] = YELLOW
   
   if green_counter == 5:
@@ -112,10 +123,31 @@ def gradeWord():
     game_over = True
     return game_over
 
-  # Next guess!
-  current_col = 0
-  guess_counter = guess_counter + 1 if guess_counter < 5 else guess_counter
+# -------- Solver Functions ----------- #
+def let_ind(letter):
+  return ord(letter) - ord('A')
 
+def reducer(): # TODO right now, after going through greens, our logic for yellows is broken. Should only use the non-green positions
+  """Intersects the running list of possible solutions with the new information from the last guess"""
+  global poss_sols
+  for position in range(5):
+    if game_board[guess_counter][position][1] == GREEN:
+      poss_sols = poss_sols.intersection(final_hash_table[position][let_ind(game_board[guess_counter][position][0])])
+      print(str(poss_sols) + " after GREEN iteration #" + str(position))
+  for position in range(5):
+    if game_board[guess_counter][position][1] == YELLOW:
+      for pos in range(5):
+        print("Intersecting ",  poss_sols, " with ", final_hash_table[pos][let_ind(game_board[guess_counter][position][0])])
+        poss_sols = poss_sols.intersection(final_hash_table[pos][let_ind(game_board[guess_counter][position][0])])
+        print(str(poss_sols) + " after YELLOW iteration #" + str(pos))
+  for position in range(5):
+    if game_board[guess_counter][position][1] == GREY:
+      for pos in range(5):
+        poss_sols.difference_update(final_hash_table[pos][let_ind(game_board[guess_counter][position][0])])
+      print(str(poss_sols) + " after GREY iteration #" + str(position))
+  
+
+    
 
 # -------- Main Program Loop ----------- #
 print(final_word)
@@ -132,7 +164,12 @@ while running:
           if event.key == K_BACKSPACE: # delete last character
             deleteLast()
           elif event.key == K_RETURN: # check if word is correct
-            game_over = gradeWord() 
+            game_over = gradeWord()
+            reducer()
+            print(poss_sols)
+            # Next guess!
+            current_col = 0
+            guess_counter = guess_counter + 1 if guess_counter < 5 else guess_counter
           elif event.key in range(97,123): # type next letter in word
             addToBoard(event.unicode)
  

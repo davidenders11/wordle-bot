@@ -1,7 +1,10 @@
-
+def intersect(list1, list2):
+  """Return a set with every element in both lists, no duplicates"""
+  return set(list1).intersection(list2)
 
 # Word list
 def hash_table():
+    """Creates hash table where each index is the list of all words with that character in that position"""
     with open("sgb-words.txt", "r") as tf:
         words = tf.read().split('\n')
 
@@ -10,21 +13,32 @@ def hash_table():
     for w in words:
         words_upper.append(w.upper())
 
-    hash_table = [[] for size in range(130)]
+    hash_table = [[[] for width in range(26)] for height in range(5)]
 
 
     def hashfunc(word):
-        for letter_index in range(5):
-            table_index = ord(word[letter_index]) - ord('A')
-            table_index += letter_index * 26
-            hash_table[table_index].append(word)
+        """Adds each word to the hash_table"""
+        for position in range(5):
+            letter_index = ord(word[position]) - ord('A')
+            hash_table[position][letter_index].append(word)
 
-    for i in words_upper:
-        if len(i) == 5:
-            hashfunc(i)
+    for word in words_upper:
+        if len(word) == 5:
+            hashfunc(word)
 
     return hash_table
 
 final_hash_table = hash_table()
 
-print(final_hash_table[0])
+poss_sols = set([])
+for row in range(5):
+  for col in range(26):
+    for word in final_hash_table[row][col]:
+      poss_sols.add(word)
+# print(poss_sols[0])
+
+list1 = [1, 2, 3, 4, 5, 6]
+list2 = [5, 6, 7, 8, 9]
+set1 = set(list1)
+set2 = set1.difference_update(list2)
+# print(set1)
