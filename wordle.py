@@ -2,7 +2,7 @@ import numpy as np
 import random as random
 import pygame
 from pygame.locals import *
-from hash_table import final_hash_table, intersect
+from hash_table import final_hash_table
 
 # Word list
 with open("sgb-words.txt", "r") as tf:
@@ -14,7 +14,6 @@ for row in range(5):
   for col in range(26):
     for word in final_hash_table[row][col]:
       poss_sols.add(word)
-print(type(poss_sols))
 
 # Game colors and cell dimensions
 WHITE = (255, 255, 255)
@@ -27,9 +26,8 @@ HEIGHT = 75
 MARGIN = 5
 
 # Initialize game variables
-final_word = 'TALON'
-# final_word = words[random.randrange(1,5758)].upper() # Winning word!
-guess_counter = 0
+final_word = random.choice(words).upper() # winning word!
+guess_counter = 0 # What row is the player at
 current_col = 0
 game_board = [[["", GREY] for width in range(5)] for height in range(6)] 
 # 5 x 6 game board, each cell stores character (0 for empty) and color 
@@ -44,10 +42,6 @@ pygame.display.set_caption("Wordle Game")
 screen.fill(BLACK)
 
 # -------- Game Helper Functions ----------- #
-def intersection(list1, list2):
-  """Return a set with every element in both lists, no duplicates"""
-  return set(list1).intersection(list2)
-
 def deleteLast():
   """Decrement current_col to previous letter if there is one and clear that letter"""
   global current_col
@@ -65,30 +59,17 @@ def setCharToNull(word, ind):
   """Replaces the index we just visited with a space"""
   return word[0:ind] + " " + word[ind+1:]
 
-def setNextYellow(letter, guess): #TODO this might be broken
-  """Finds the next GREY occurence of letter in question and sets to YELLOW"""
-  next = guess.index(letter) # try the first occurence of the letter
-  color = game_board[guess_counter][next][1]
-  while (color != GREY):
-    next = guess.index(letter, next + 1) # look for next instance of letter
-    color = game_board[guess_counter][next][1]
-  game_board[guess_counter][next][1] = YELLOW
-
 def grade_word():
   """Grades word if complete word has been typed, else does nothing"""
-
   global current_col
   global guess_counter
-  game_over = False
-
-  # use this to modify correct word to avoid double-counting
-  final_copy = final_word 
+  game_over = False # Use to end game loop when game is over
+  final_copy = final_word # use this to modify correct word to avoid double-counting
+  green_counter = 0 # player wins if equals 5
+  guess = ''.join([game_board[guess_counter][col][0] for col in range(5)]) # create string from game_board row
 
   if current_col != 5: return # character counter should be at 5 if word done
-  green_counter = 0 # player wins if equals 5
-
-  guess = ''.join([game_board[guess_counter][col][0] for col in range(5)])
-
+  
   # Check for greens
   for ind in range(0, 5):
     if final_copy[ind] == guess[ind]: # Right letter in right spot
@@ -98,7 +79,7 @@ def grade_word():
       final_copy = setCharToNull(final_copy, ind) # avoid double-counting
 
   for ind in range(0,5):
-    # Check if we already marked green
+    # Check if we already marked green so greens don't get marked yellow
     if final_copy[ind] == ' ':
         ind += 1
     if ind < 5 and guess[ind] in final_copy:
@@ -117,9 +98,10 @@ def grade_word():
 
 # -------- Solver Functions ----------- #
 def let_ind(letter):
+  """Maps character to bucket 0-25"""
   return ord(letter) - ord('A')
 
-def reducer(): # TODO right now, after going through greens, our logic for yellows is broken. Should only use the non-green positions
+def reducer():
   """Intersects the running list of possible solutions with the new information from the last guess"""
   global poss_sols
   for position in range(5):
@@ -173,8 +155,7 @@ while running:
     if solve:
       pick_next()
       current_col = 5 # Needed to pass grade_word() check
-      print(guess_counter)
-      game_over = grade_word()
+      solve = not grade_word()
       pygame.time.delay(500)
       reducer()
       guess_counter = guess_counter + 1 if guess_counter < 5 else guess_counter
