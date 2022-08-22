@@ -105,11 +105,13 @@ def reducer():
   """Intersects the running list of possible solutions with the new information from the last guess"""
   global poss_sols
   for position in range(5):
+    # For characters marked green, we get the intersection of the running set of possible solutions with the set 
+    # of all words that have that character in that position
     if game_board[guess_counter][position][1] == GREEN:
       poss_sols.intersection_update(final_hash_table[position][let_ind(game_board[guess_counter][position][0])])
       # print(str(poss_sols) + "\nafter GREEN character at position " + str(position) + "\n")
-  for position in range(5):
-    if game_board[guess_counter][position][1] == YELLOW:
+    # For yellow chars, intersect remaining solutions w/ set of all words with that char. anywhere in word
+    elif game_board[guess_counter][position][1] == YELLOW:
       yellows = set([])
       for pos in range(5):
         for word in final_hash_table[pos][let_ind(game_board[guess_counter][position][0])]:
@@ -117,12 +119,13 @@ def reducer():
       # print("\nIntersecting\n",  poss_sols, "\nwith\n", yellows)
       poss_sols.intersection_update(yellows)
       # print("\n" + str(poss_sols) + " \nafter YELLOW char. at position #" + str(position) + "\n")
-  for position in range(5):
-    if game_board[guess_counter][position][1] == GREY:
+    # For grey chars, intersect remaining solutions w/ set of all words w/o that char. in that position
+    elif game_board[guess_counter][position][1] == GREY:
       poss_sols.difference_update(final_hash_table[position][let_ind(game_board[guess_counter][position][0])])
       # print("\n" + str(poss_sols) + " \nafter GREY character at position #" + str(position) + "\n")
   
 def pick_next():
+  """Picks random word from set of possible remaining solutions and adds it to board"""
   best_guess = poss_sols.pop()
   print("Computer guessed: " + best_guess + "\n")
   for letter in range(5):
@@ -132,7 +135,6 @@ def pick_next():
 # -------- Main Program Loop ----------- #
 print(final_word)
 running = True
-game_over = False
 solve = False
 clock = pygame.time.Clock() # Used to manage how fast the screen updates
 while running:
@@ -146,7 +148,7 @@ while running:
         elif event.key == K_BACKSPACE: # delete last character
           deleteLast()
         elif event.key == K_RETURN: # check if word is correct
-          game_over = grade_word()
+          running = not grade_word() # grade_word() returns true if game is over
           # Next guess!
           current_col = 0
           guess_counter = guess_counter + 1 if guess_counter < 5 else guess_counter
@@ -159,8 +161,6 @@ while running:
       pygame.time.delay(500)
       reducer()
       guess_counter = guess_counter + 1 if guess_counter < 5 else guess_counter
-    if game_over == True:
-      running = False # end game if game over
  
     # Set the screen background
     screen.fill(BLACK)
