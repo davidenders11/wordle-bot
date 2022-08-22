@@ -3,17 +3,21 @@ import random as random
 import pygame
 from pygame.locals import *
 from hash_table import final_hash_table
+import button
 
 # Word list
 with open("sgb-words.txt", "r") as tf:
   words = tf.read().split('\n')
 
-# Initialize running list of possible words
 poss_sols = set([])
-for row in range(5):
-  for col in range(26):
-    for word in final_hash_table[row][col]:
-      poss_sols.add(word)
+
+# Initialize running list of possible words
+def init_words():
+  poss_sols = set([])
+  for row in range(5):
+    for col in range(26):
+      for word in final_hash_table[row][col]:
+        poss_sols.add(word)
 
 # Game colors and cell dimensions
 WHITE = (255, 255, 255)
@@ -68,7 +72,6 @@ def grade_word():
   final_copy = final_word # use this to modify correct word to avoid double-counting
   green_counter = 0 # player wins if equals 5
   guess = ''.join([game_board[guess_counter][col][0] for col in range(5)]) # create string from game_board row
-
   if current_col != 5: return # character counter should be at 5 if word done
   
   # Check for greens
@@ -102,6 +105,10 @@ def let_ind(letter):
   """Maps character to bucket 0-25"""
   return ord(letter) - ord('A')
 
+def int_let(int_val):
+  # Maps integer to a letter: 0-25 = A-Z
+  return chr(ord('A') + int_val)
+
 def reducer():
   """Intersects the running list of possible solutions with the new information from the last guess"""
   global poss_sols
@@ -131,7 +138,28 @@ def pick_next():
   print("Computer guessed: " + best_guess + "\n")
   for letter in range(5):
     game_board[guess_counter][letter][0] = best_guess[letter]
-    
+  
+
+def next_best():
+  letter_counter = [[0 for height in range(26)] for width in range(5)]
+  for row in range(5):
+    for col in range(26):
+      for word in list(poss_sols[row][col]):
+        for letter in range(5):
+          letter_counter[row][let_ind(word[letter])] += 1
+    for col in range(25):
+      highest_val = 0
+      if(letter_counter[row][col] > highest_val):
+        highest_val = letter_counter[row][col]
+        highest_val_ind = col
+    print('most common letter for guess # ', row+1 , ': ', int_let(highest_val_ind))
+
+
+
+#TO DRAW BUTTONS: 
+#
+# restart_button = Button(100, 200, restart_game_img, 0.5)
+#
 
 # -------- Main Program Loop ----------- #
 print(final_word)
@@ -161,6 +189,7 @@ while running:
       solve = not grade_word()
       pygame.time.delay(500)
       reducer()
+      print("current possibilities: ", poss_sols)
       guess_counter = guess_counter + 1 if guess_counter < 5 else guess_counter
  
     # Set the screen background

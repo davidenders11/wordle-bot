@@ -37,8 +37,5 @@ for row in range(5):
       poss_sols.add(word)
 # print(poss_sols[0])
 
-list1 = [1, 2, 3, 4, 5, 6]
-list2 = [5, 6, 7, 8, 9]
-set1 = set(list1)
-set2 = set1.difference_update(list2)
-# print(set1)
+print(chr(ord('A')+1))
+
