@@ -26,7 +26,8 @@ HEIGHT = 75
 MARGIN = 5
 
 # Initialize game variables
-final_word = random.choice(words).upper() # winning word!
+final_word = 'TIGHT'
+#  random.choice(words).upper() # winning word!
 guess_counter = 0 # What row is the player at
 current_col = 0
 game_board = [[["", GREY] for width in range(5)] for height in range(6)] 
@@ -81,8 +82,8 @@ def grade_word():
   for ind in range(0,5):
     # Check if we already marked green so greens don't get marked yellow
     if final_copy[ind] == ' ':
-        ind += 1
-    if ind < 5 and guess[ind] in final_copy:
+        pass
+    elif guess[ind] in final_copy:
       print(guess[ind] + " is in " + final_word + " at a different location!")
       game_board[guess_counter][ind][1] = YELLOW
       final_copy = setCharToNull(final_copy, final_copy.index(guess[ind])) # avoid double-counting
