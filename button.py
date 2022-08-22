@@ -22,8 +22,8 @@ def draw(self, surface):
     #if button is clicked
     if self.rect.collidepoint(pos):
         if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
-        print('CLICKED RESTART')
-        self.clicked = True
+            print('CLICKED RESTART')
+            self.clicked = True
 
     if pygame.mouse.get_pressed()[0] == 0:
         self.clicked = False
