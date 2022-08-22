@@ -27,7 +27,7 @@ HEIGHT = 75
 MARGIN = 5
 
 # Initialize game variables
-final_word = 'TROLL'
+final_word = 'TALON'
 # final_word = words[random.randrange(1,5758)].upper() # Winning word!
 guess_counter = 0
 current_col = 0
@@ -74,7 +74,7 @@ def setNextYellow(letter, guess): #TODO this might be broken
     color = game_board[guess_counter][next][1]
   game_board[guess_counter][next][1] = YELLOW
 
-def gradeWord():
+def grade_word():
   """Grades word if complete word has been typed, else does nothing"""
 
   global current_col
@@ -117,8 +117,7 @@ def gradeWord():
     print("You won on guess number " + str(guess_counter + 1) + "!")
     game_over = True
     return game_over
-
-  if guess_counter == 6:
+  elif guess_counter == 5:
     print("You lost, bitch")
     game_over = True
     return game_over
@@ -132,46 +131,61 @@ def reducer(): # TODO right now, after going through greens, our logic for yello
   global poss_sols
   for position in range(5):
     if game_board[guess_counter][position][1] == GREEN:
-      poss_sols = poss_sols.intersection(final_hash_table[position][let_ind(game_board[guess_counter][position][0])])
-      print(str(poss_sols) + " after GREEN iteration #" + str(position))
+      poss_sols.intersection_update(final_hash_table[position][let_ind(game_board[guess_counter][position][0])])
+      print(str(poss_sols) + "\nafter GREEN character at position " + str(position) + "\n")
   for position in range(5):
     if game_board[guess_counter][position][1] == YELLOW:
+      yellows = set([])
       for pos in range(5):
-        print("Intersecting ",  poss_sols, " with ", final_hash_table[pos][let_ind(game_board[guess_counter][position][0])])
-        poss_sols = poss_sols.intersection(final_hash_table[pos][let_ind(game_board[guess_counter][position][0])])
-        print(str(poss_sols) + " after YELLOW iteration #" + str(pos))
+        for word in final_hash_table[pos][let_ind(game_board[guess_counter][position][0])]:
+          yellows.add(word)
+      print("\nIntersecting\n",  poss_sols, "\nwith\n", yellows)
+      poss_sols.intersection_update(yellows)
+      print("\n" + str(poss_sols) + " \nafter YELLOW char. at position #" + str(position) + "\n")
   for position in range(5):
     if game_board[guess_counter][position][1] == GREY:
-      for pos in range(5):
-        poss_sols.difference_update(final_hash_table[pos][let_ind(game_board[guess_counter][position][0])])
-      print(str(poss_sols) + " after GREY iteration #" + str(position))
+      poss_sols.difference_update(final_hash_table[position][let_ind(game_board[guess_counter][position][0])])
+      print("\n" + str(poss_sols) + " \nafter GREY character at position#" + str(position) + "\n")
   
-
+def pick_next():
+  best_guess = poss_sols.pop()
+  print("Computer guessed: " + best_guess + "\n")
+  for letter in range(5):
+    game_board[guess_counter][letter][0] = best_guess[letter]
     
 
 # -------- Main Program Loop ----------- #
 print(final_word)
 running = True
 game_over = False
+solve = False
 clock = pygame.time.Clock() # Used to manage how fast the screen updates
 while running:
     for event in pygame.event.get():  # User did something
-        if event.type == pygame.QUIT or \
+      if event.type == pygame.QUIT or \
         (event.type == KEYDOWN and event.key == K_ESCAPE) or \
-          game_over == True:
+        game_over == True:
           running = False # end game if quit
-        elif event.type == pygame.KEYDOWN:
-          if event.key == K_BACKSPACE: # delete last character
-            deleteLast()
-          elif event.key == K_RETURN: # check if word is correct
-            game_over = gradeWord()
-            reducer()
-            print(poss_sols)
-            # Next guess!
-            current_col = 0
-            guess_counter = guess_counter + 1 if guess_counter < 5 else guess_counter
-          elif event.key in range(97,123): # type next letter in word
-            addToBoard(event.unicode)
+      elif event.type == pygame.KEYDOWN:
+        if event.key == K_RIGHT:
+          solve = True
+        elif event.key == K_BACKSPACE: # delete last character
+          deleteLast()
+        elif event.key == K_RETURN: # check if word is correct
+          game_over = grade_word()
+          # Next guess!
+          current_col = 0
+          guess_counter = guess_counter + 1 if guess_counter < 5 else guess_counter
+        elif event.key in range(97,123): # type next letter in word
+          addToBoard(event.unicode)
+    if solve:
+      pick_next()
+      current_col = 5 # Needed to pass grade_word() check
+      print(guess_counter)
+      game_over = grade_word()
+      pygame.time.delay(500)
+      reducer()
+      guess_counter = guess_counter + 1 if guess_counter < 5 else guess_counter
  
     # Set the screen background
     screen.fill(BLACK)
