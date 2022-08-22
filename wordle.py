@@ -89,14 +89,6 @@ def grade_word():
 
   guess = ''.join([game_board[guess_counter][col][0] for col in range(5)])
 
-  if guess.lower() in words:
-    print("You guessed: " + guess)
-  else:
-    print("Not a valid word")
-    for i in range(5):
-      deleteLast()
-    return game_over
-
   # Check for greens
   for ind in range(0, 5):
     if final_copy[ind] == guess[ind]: # Right letter in right spot
@@ -107,11 +99,12 @@ def grade_word():
 
   for ind in range(0,5):
     # Check if we already marked green
-    if final_copy[ind] == ' ' and ind != 4:
+    if final_copy[ind] == ' ':
         ind += 1
-    if guess[ind] in final_copy:
+    if ind < 5 and guess[ind] in final_copy:
       print(guess[ind] + " is in " + final_word + " at a different location!")
       game_board[guess_counter][ind][1] = YELLOW
+      final_copy = setCharToNull(final_copy, final_copy.index(guess[ind])) # avoid double-counting
   
   if green_counter == 5:
     print("You won on guess number " + str(guess_counter + 1) + "!")
@@ -132,20 +125,20 @@ def reducer(): # TODO right now, after going through greens, our logic for yello
   for position in range(5):
     if game_board[guess_counter][position][1] == GREEN:
       poss_sols.intersection_update(final_hash_table[position][let_ind(game_board[guess_counter][position][0])])
-      print(str(poss_sols) + "\nafter GREEN character at position " + str(position) + "\n")
+      # print(str(poss_sols) + "\nafter GREEN character at position " + str(position) + "\n")
   for position in range(5):
     if game_board[guess_counter][position][1] == YELLOW:
       yellows = set([])
       for pos in range(5):
         for word in final_hash_table[pos][let_ind(game_board[guess_counter][position][0])]:
           yellows.add(word)
-      print("\nIntersecting\n",  poss_sols, "\nwith\n", yellows)
+      # print("\nIntersecting\n",  poss_sols, "\nwith\n", yellows)
       poss_sols.intersection_update(yellows)
-      print("\n" + str(poss_sols) + " \nafter YELLOW char. at position #" + str(position) + "\n")
+      # print("\n" + str(poss_sols) + " \nafter YELLOW char. at position #" + str(position) + "\n")
   for position in range(5):
     if game_board[guess_counter][position][1] == GREY:
       poss_sols.difference_update(final_hash_table[position][let_ind(game_board[guess_counter][position][0])])
-      print("\n" + str(poss_sols) + " \nafter GREY character at position#" + str(position) + "\n")
+      # print("\n" + str(poss_sols) + " \nafter GREY character at position #" + str(position) + "\n")
   
 def pick_next():
   best_guess = poss_sols.pop()
@@ -163,9 +156,8 @@ clock = pygame.time.Clock() # Used to manage how fast the screen updates
 while running:
     for event in pygame.event.get():  # User did something
       if event.type == pygame.QUIT or \
-        (event.type == KEYDOWN and event.key == K_ESCAPE) or \
-        game_over == True:
-          running = False # end game if quit
+      (event.type == KEYDOWN and event.key == K_ESCAPE):
+        running = False
       elif event.type == pygame.KEYDOWN:
         if event.key == K_RIGHT:
           solve = True
@@ -186,6 +178,8 @@ while running:
       pygame.time.delay(500)
       reducer()
       guess_counter = guess_counter + 1 if guess_counter < 5 else guess_counter
+    if game_over == True:
+      running = False # end game if game over
  
     # Set the screen background
     screen.fill(BLACK)
