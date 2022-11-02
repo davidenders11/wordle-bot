@@ -35,7 +35,3 @@ for row in range(5):
   for col in range(26):
     for word in final_hash_table[row][col]:
       poss_sols.add(word)
-# print(poss_sols[0])
-
-print(chr(ord('A')+1))
-

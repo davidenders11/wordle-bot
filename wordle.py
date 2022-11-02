@@ -3,21 +3,17 @@ import random as random
 import pygame
 from pygame.locals import *
 from hash_table import final_hash_table
-import button
 
 # Word list
 with open("sgb-words.txt", "r") as tf:
   words = tf.read().split('\n')
 
-poss_sols = set([])
-
 # Initialize running list of possible words
-def init_words():
-  poss_sols = set([])
-  for row in range(5):
-    for col in range(26):
-      for word in final_hash_table[row][col]:
-        poss_sols.add(word)
+poss_sols = set([])
+for row in range(5):
+  for col in range(26):
+    for word in final_hash_table[row][col]:
+      poss_sols.add(word)
 
 # Game colors and cell dimensions
 WHITE = (255, 255, 255)
@@ -30,8 +26,7 @@ HEIGHT = 75
 MARGIN = 5
 
 # Initialize game variables
-final_word = 'TIGHT'
-#  random.choice(words).upper() # winning word!
+final_word = random.choice(words).upper() # winning word!
 guess_counter = 0 # What row is the player at
 current_col = 0
 game_board = [[["", GREY] for width in range(5)] for height in range(6)] 
@@ -72,12 +67,13 @@ def grade_word():
   final_copy = final_word # use this to modify correct word to avoid double-counting
   green_counter = 0 # player wins if equals 5
   guess = ''.join([game_board[guess_counter][col][0] for col in range(5)]) # create string from game_board row
+
   if current_col != 5: return # character counter should be at 5 if word done
   
   # Check for greens
   for ind in range(0, 5):
     if final_copy[ind] == guess[ind]: # Right letter in right spot
-      print(guess[ind] + " is in " + final_word + " at that location!")
+      print(guess[ind] + " is in the word at that location!")
       game_board[guess_counter][ind][1] = GREEN
       green_counter += 1
       final_copy = setCharToNull(final_copy, ind) # avoid double-counting
@@ -87,7 +83,7 @@ def grade_word():
     if final_copy[ind] == ' ':
         pass
     elif guess[ind] in final_copy:
-      print(guess[ind] + " is in " + final_word + " at a different location!")
+      print(guess[ind] + " is in the word at a different location!")
       game_board[guess_counter][ind][1] = YELLOW
       final_copy = setCharToNull(final_copy, final_copy.index(guess[ind])) # avoid double-counting
   
@@ -96,18 +92,24 @@ def grade_word():
     game_over = True
     return game_over
   elif guess_counter == 5:
-    print("You lost, bitch")
+    print("You lost. Final word was " + final_word)
     game_over = True
     return game_over
+  
+def print_instructions():
+  """Text-based terminal output instructions"""
+  line1 = "\nWelcome to Wordle!\n\n"
+  line2 = "Instructions: \n\n"
+  line3 = "1. Type your five-letter guess. Press delete to edit, and return when finished with a word. \n\n"
+  line4 = "2. Characters in the correct spot will highlight green. If a character is in the word but in the wrong spot, it will highlight yellow. \n\n"
+  line5 = "3. Press the right arrow key to engage the solver."
+  print(line1 + line2 + line3 + line4 + line5)
+    
 
 # -------- Solver Functions ----------- #
 def let_ind(letter):
   """Maps character to bucket 0-25"""
   return ord(letter) - ord('A')
-
-def int_let(int_val):
-  # Maps integer to a letter: 0-25 = A-Z
-  return chr(ord('A') + int_val)
 
 def reducer():
   """Intersects the running list of possible solutions with the new information from the last guess"""
@@ -117,20 +119,16 @@ def reducer():
     # of all words that have that character in that position
     if game_board[guess_counter][position][1] == GREEN:
       poss_sols.intersection_update(final_hash_table[position][let_ind(game_board[guess_counter][position][0])])
-      # print(str(poss_sols) + "\nafter GREEN character at position " + str(position) + "\n")
     # For yellow chars, intersect remaining solutions w/ set of all words with that char. anywhere in word
     elif game_board[guess_counter][position][1] == YELLOW:
       yellows = set([])
       for pos in range(5):
         for word in final_hash_table[pos][let_ind(game_board[guess_counter][position][0])]:
           yellows.add(word)
-      # print("\nIntersecting\n",  poss_sols, "\nwith\n", yellows)
       poss_sols.intersection_update(yellows)
-      # print("\n" + str(poss_sols) + " \nafter YELLOW char. at position #" + str(position) + "\n")
     # For grey chars, intersect remaining solutions w/ set of all words w/o that char. in that position
     elif game_board[guess_counter][position][1] == GREY:
       poss_sols.difference_update(final_hash_table[position][let_ind(game_board[guess_counter][position][0])])
-      # print("\n" + str(poss_sols) + " \nafter GREY character at position #" + str(position) + "\n")
   
 def pick_next():
   """Picks random word from set of possible remaining solutions and adds it to board"""
@@ -138,31 +136,10 @@ def pick_next():
   print("Computer guessed: " + best_guess + "\n")
   for letter in range(5):
     game_board[guess_counter][letter][0] = best_guess[letter]
-  
-
-def next_best():
-  letter_counter = [[0 for height in range(26)] for width in range(5)]
-  for row in range(5):
-    for col in range(26):
-      for word in list(poss_sols[row][col]):
-        for letter in range(5):
-          letter_counter[row][let_ind(word[letter])] += 1
-    for col in range(25):
-      highest_val = 0
-      if(letter_counter[row][col] > highest_val):
-        highest_val = letter_counter[row][col]
-        highest_val_ind = col
-    print('most common letter for guess # ', row+1 , ': ', int_let(highest_val_ind))
-
-
-
-#TO DRAW BUTTONS: 
-#
-# restart_button = Button(100, 200, restart_game_img, 0.5)
-#
+    
 
 # -------- Main Program Loop ----------- #
-print(final_word)
+print_instructions()
 running = True
 solve = False
 clock = pygame.time.Clock() # Used to manage how fast the screen updates
@@ -179,8 +156,9 @@ while running:
         elif event.key == K_RETURN: # check if word is correct
           running = not grade_word() # grade_word() returns true if game is over
           # Next guess!
-          current_col = 0
-          guess_counter = guess_counter + 1 if guess_counter < 5 else guess_counter
+          if current_col == 5: # Return key does nothing if guess isn't complete
+            current_col = 0
+            guess_counter = guess_counter + 1 if guess_counter < 5 else guess_counter
         elif event.key in range(97,123): # type next letter in word
           addToBoard(event.unicode)
     if solve:
@@ -189,7 +167,6 @@ while running:
       solve = not grade_word()
       pygame.time.delay(500)
       reducer()
-      print("current possibilities: ", poss_sols)
       guess_counter = guess_counter + 1 if guess_counter < 5 else guess_counter
  
     # Set the screen background
