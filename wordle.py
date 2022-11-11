@@ -5,7 +5,21 @@ from pygame.locals import *
 
 # Word list
 with open("sgb-words.txt", "r") as tf:
+<<<<<<< Updated upstream
     words = tf.read().split('\n')
+=======
+  words = tf.read().split('\n')
+
+
+# Initialize running list of possible words
+
+poss_sols = set([])
+for row in range(5):
+  for col in range(26):
+    for word in final_hash_table[row][col]:
+      poss_sols.add(word)
+
+>>>>>>> Stashed changes
 
 # Game colors and cell dimensions
 WHITE = (255, 255, 255)
